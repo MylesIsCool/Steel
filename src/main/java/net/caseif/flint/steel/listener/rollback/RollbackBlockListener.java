@@ -26,22 +26,14 @@ package net.caseif.flint.steel.listener.rollback;
 
 import net.caseif.flint.steel.util.agent.rollback.RollbackAgent;
 
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockBurnEvent;
-import org.bukkit.event.block.BlockFadeEvent;
-import org.bukkit.event.block.BlockFormEvent;
-import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockGrowEvent;
-import org.bukkit.event.block.BlockMultiPlaceEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPistonRetractEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.block.*;
+import org.bukkit.event.player.PlayerInteractEvent;
 
 /**
  * Listener for physical events logged by the rollback engine.
@@ -74,7 +66,6 @@ public class RollbackBlockListener implements Listener {
     public void onBlockFromTo(BlockFromToEvent event) {
         RollbackAgent.checkBlockChange(event.getBlock().getLocation(), event.getBlock().getState(), event);
     }
-
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockSpread(BlockSpreadEvent event) {
         RollbackAgent.checkBlockChange(event.getBlock().getLocation(), event.getBlock().getState(), event);
@@ -85,16 +76,26 @@ public class RollbackBlockListener implements Listener {
         RollbackAgent.checkBlockChange(event.getBlock().getLocation(), event.getBlock().getState(), event);
         for (Block b : event.getBlocks()) {
             RollbackAgent.checkBlockChange(b.getLocation(), b.getState(), event);
+            // Check if any new blocks new to be set back to air
+            Block target = b.getRelative(event.getDirection());
+            RollbackAgent.checkBlockChange(target.getLocation(), target.getState(), event);
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        if(event.getClickedBlock() == null) return;
+        RollbackAgent.checkBlockChange(event.getClickedBlock().getLocation(), event.getClickedBlock().getState(), event);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPistonRetract(BlockPistonRetractEvent event) {
-        RollbackAgent.checkBlockChange(event.getBlock().getLocation(), event.getBlock().getState(), event);
+        Block target = event.getBlock().getRelative(event.getDirection().getOppositeFace());
+        RollbackAgent.checkBlockChange(target.getLocation(), target.getState(), event);
+        if (!event.isSticky()) return;
         for (Block b : event.getBlocks()) {
             RollbackAgent.checkBlockChange(b.getLocation(), b.getState(), event);
         }
-        //TODO: some blocks probably won't be rolled back properly
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
