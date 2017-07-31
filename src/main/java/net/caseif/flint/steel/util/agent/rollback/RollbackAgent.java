@@ -62,12 +62,15 @@ import java.util.UUID;
  */
 public final class RollbackAgent extends CommonRollbackAgent {
 
+    // Disable rollback
+    private static final boolean DISABLED = true;
+
     /**
      * Creates a new {@link RollbackAgent} backing the given
      * {@link SteelArena}.
      *
      * @param arena The {@link SteelArena} to be backed by the new
-     *     {@link RollbackAgent}
+     *              {@link RollbackAgent}
      */
     public RollbackAgent(CommonArena arena) {
         super(arena);
@@ -81,12 +84,12 @@ public final class RollbackAgent extends CommonRollbackAgent {
     /**
      * Logs a rollback change at the given location.
      *
-     * @param location The location of the change
+     * @param location      The location of the change
      * @param originalState The state of the rollback before the change
-     * @throws IOException If an exception occurs while reading to or from the
-     *     rollback database
+     * @throws IOException  If an exception occurs while reading to or from the
+     *                      rollback database
      * @throws SQLException If an exception occurs while manipulating the
-     *     rollback database
+     *                      rollback database
      */
     @SuppressWarnings("deprecation")
     public void logBlockChange(Location location, BlockState originalState) throws IOException, SQLException {
@@ -114,6 +117,8 @@ public final class RollbackAgent extends CommonRollbackAgent {
     }
 
     public static void checkBlockChange(Location location, BlockState state, Event event) {
+        if (DISABLED)
+            return;
         List<Arena> arenas = checkChangeAtLocation(LocationHelper.convertLocation(location));
         for (Arena arena : arenas) {
             try {
@@ -126,6 +131,8 @@ public final class RollbackAgent extends CommonRollbackAgent {
     }
 
     public static void checkEntityChange(Entity entity, boolean newlyCreated, Event event) {
+        if (DISABLED)
+            return;
         List<Arena> arenas = checkChangeAtLocation(LocationHelper.convertLocation(entity.getLocation()));
         for (Arena arena : arenas) {
             try {
